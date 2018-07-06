@@ -1,16 +1,34 @@
 module Main
 
 open FStar.All
-open FStar.List.Tot
 open FStar.IO
-open FStar.String
+open FStar.Math.Lemmas
+open FStar.Math
+open FStar.Order
 
+val is_common_factor : pos -> pos -> pos -> bool
+let is_common_factor a b c = (a % c = 0) && (b % c = 0)
 
-val hamming_distance: #a:eqtype -> l1:list a -> l2:list a{ List.length l1 = List.length l2 } -> int
-let rec hamming_distance #a l1 l2 =
-    match l1, l2 with
-    | [], [] -> 0
-    | hd1::tl1, hd2::tl2 -> (if hd1 = hd2 then 1 else 0) + hamming_distance tl1 tl2
+type common_factor (a:pos) (b:pos) = c:pos{is_common_factor a b c}
 
-let main =
-    print_string "is sorted"
+val division_distributivity : a:pos -> b:pos -> c:pos{is_common_factor a b c} -> Lemma ((a+b) % c = 0)
+let division_distributivity a b c = Math.Lemmas.modulo_distributivity a b c
+// modulo_distributivity a b c = Lemma ((a + b) % c = (a + (b % c)) % c))
+
+val gcd' : a:pos -> b:pos -> Tot (c:pos{is_common_factor a b c}) (decreases %[a+b; b])
+let rec gcd' a b =
+    match compare_int a b with
+    | Gt ->
+        let g = gcd' (a-b) b in
+        division_distributivity (a-b) b g;
+        g
+    | Lt -> gcd' b a
+    | Eq -> a
+
+val gcd : a:pos -> b:pos -> Tot (common_factor a b)
+let gcd = gcd'
+
+val print_gcd : a:pos -> b:pos -> ML unit
+let print_gcd a b = print_string (string_of_int (gcd a b)); print_newline ()
+
+let main = print_gcd 374 816

@@ -1,4 +1,4 @@
-include makefile.include
+#include makefile.include
 
 .phony: execute check clean depend
 
@@ -17,10 +17,12 @@ FST_CHECKED := $(addprefix $(CACHE_DIR)/, $(addsuffix .checked, $(FST_SRC)))
 FSTAR += --cache_dir $(CACHE_DIR) --cache_checked_modules
 FSTAR += --record_hints --use_hints --use_hint_hashes --detail_hint_replay
 
+OCAMLOPT := ocamlfind opt -package fstarlib -linkpkg -g
+
 execute: $(EXE)
 	./$(EXE)
 
-$(EXE): $(OCAML_CMX)
+$(EXE): ml/FStar_Order.cmx $(OCAML_CMX)
 	$(OCAMLOPT) -I ./$(ML_DIR) -o $(EXE) $^
 
 $(ML_DIR)/%.cmx: $(ML_DIR)/%.ml
